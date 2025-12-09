@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F5F5F5">
+
+    <!-- Верхняя панель -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#1976D2"
+        android:padding="16dp"
+        android:gravity="center_vertical">
+
+        <!-- ВОТ ЗДЕСЬ БЫЛА ОШИБКА. Добавлена высота wrap_content -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Privacy Inspector"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold"/>
+            <TextView
+                android:id="@+id/tvDatabaseSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="База: ожидание..."
+                android:textColor="#BBDEFB"
+                android:textSize="12sp"/>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnVpnToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="START"
+            android:backgroundTint="#FFC107"
+            android:textColor="#000000"/>
+    </LinearLayout>
+
+    <!-- Карточка статистики -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="12dp"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="4dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="АНАЛИТИКА УГРОЗ"
+                android:textStyle="bold"
+                android:textColor="#333333"/>
+
+            <TextView
+                android:id="@+id/tvStats"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Нет данных для анализа..."
+                android:layout_marginTop="8dp"
+                android:fontFamily="monospace"
+                android:textSize="12sp"/>
+
+            <ProgressBar
+                android:id="@+id/progressRisk"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:max="100"
+                android:progress="0"/>
+
+            <TextView
+                android:id="@+id/tvRiskPercent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Риск приватности: 0%"
+                android:layout_gravity="end"
+                android:layout_marginTop="4dp"
+                android:textSize="12sp"
+                android:textStyle="bold"/>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingBottom="4dp"
+        android:text="Поток данных (Live Log)"
+        android:textStyle="bold"
+        android:textColor="#757575"/>
+
+    <!-- Список логов -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvLogs"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="#FFFFFF"/>
+
+</LinearLayout>
