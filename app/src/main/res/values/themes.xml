@@ -1,9 +1,22 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.PrivacyInspector" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
-    </style>
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Наша кастомная тема -->
+    <style name="Theme.PrivacyInspector" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Цвета фона -->
+        <item name="android:windowBackground">@color/bg_main</item>
+        <item name="android:colorBackground">@color/bg_main</item>
 
-    <style name="Theme.PrivacyInspector" parent="Base.Theme.PrivacyInspector" />
+        <!-- Основные цвета -->
+        <item name="colorPrimary">@color/neon_blue</item>
+        <item name="colorPrimaryDark">@color/bg_main</item>
+        <item name="colorAccent">@color/neon_green</item>
+
+        <!-- Системные бары -->
+        <item name="android:statusBarColor">@color/bg_main</item>
+        <item name="android:navigationBarColor">@color/bg_main</item>
+
+        <!-- Цвет текста по умолчанию -->
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+    </style>
 </resources>

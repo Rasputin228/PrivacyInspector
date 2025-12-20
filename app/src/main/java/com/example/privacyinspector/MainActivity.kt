@@ -7,9 +7,11 @@ import android.content.IntentFilter
 import android.graphics.Color
 import android.net.VpnService
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -22,24 +24,16 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
-// --- ЛЕКАРСТВО ОТ КРАШЕЙ ---
-// Этот класс перехватывает ошибки при обновлении списка
 class WrapContentLinearLayoutManager(context: Context) : LinearLayoutManager(context) {
     override fun onLayoutChildren(recycler: RecyclerView.Recycler?, state: RecyclerView.State?) {
-        try {
-            super.onLayoutChildren(recycler, state)
-        } catch (e: IndexOutOfBoundsException) {
-            Log.e("RV", "Inconsistency detected! Ignored.")
-        }
+        try { super.onLayoutChildren(recycler, state) } catch (e: IndexOutOfBoundsException) {}
     }
 }
-// ---------------------------
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private val logList = mutableListOf<TrafficLog>()
-    private val logAdapter = LogAdapter(logList)
+    private val logAdapter = LogAdapter(AnalyticsManager.getLogs())
     private var isVpnRunning = false
 
     private val vpnReceiver = object : BroadcastReceiver() {
@@ -48,12 +42,16 @@ class MainActivity : AppCompatActivity() {
                 val domain = intent.getStringExtra("domain") ?: return
                 val isTracker = intent.getBooleanExtra("isTracker", false)
 
-                // Добавляем в аналитику
-                val logItem = TrafficLog("now", domain, isTracker)
+                val companyInfo = Enricher.identifyCompany(domain)
+                val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+
+                val logItem = TrafficLog(time, domain, "DNS", isTracker, companyInfo)
                 AnalyticsManager.addLog(logItem)
 
-                // Обновляем UI безопасно
-                updateLogUI(logItem)
+                logAdapter.notifyItemInserted(0)
+                if ((binding.rvLogs.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition() == 0) {
+                    binding.rvLogs.scrollToPosition(0)
+                }
                 updateStatsUI()
 
             } else if (intent?.action == "VPN_STATUS") {
@@ -70,10 +68,13 @@ class MainActivity : AppCompatActivity() {
 
         setupUI()
 
+        // Показываем текущий DNS
+        val prefs = getSharedPreferences("vpn_prefs", MODE_PRIVATE)
+        val currentDns = prefs.getString("dns_server", "1.1.1.1")
+        binding.tvCurrentDns.text = "Server: $currentDns"
+
         CoroutineScope(Dispatchers.Main).launch {
-            binding.tvDatabaseSize.text = "Загрузка базы..."
             BlocklistManager.loadBlocklist()
-            binding.tvDatabaseSize.text = "База защиты: ${BlocklistManager.getSize()} доменов"
         }
 
         LocalBroadcastManager.getInstance(this).registerReceiver(vpnReceiver,
@@ -85,108 +86,112 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        // Используем наш безопасный менеджер
         binding.rvLogs.layoutManager = WrapContentLinearLayoutManager(this)
         binding.rvLogs.adapter = logAdapter
+        (binding.rvLogs.itemAnimator as? androidx.recyclerview.widget.SimpleItemAnimator)?.supportsChangeAnimations = false
 
-        binding.btnVpnToggle.setOnClickListener {
-            if (isVpnRunning) {
-                startService(Intent(this, PrivacyVpnService::class.java).setAction("STOP"))
-            } else {
-                val intent = VpnService.prepare(this)
-                if (intent != null) {
-                    startActivityForResult(intent, 0)
-                } else {
-                    onActivityResult(0, RESULT_OK, null)
-                }
-            }
+        // КНОПКА ЗАПУСКА (Огромная, по центру)
+        binding.btnPower.setOnClickListener {
+            toggleVpn()
+        }
+        binding.cardBlocked.setOnClickListener {
+            val intent = Intent(this, BlockedActivity::class.java)
+            startActivity(intent)
+        }
+
+        // НАСТРОЙКИ (Свой DNS)
+        binding.btnSettings.setOnClickListener {
+            showDnsDialog()
         }
     }
 
-    private fun updateLogUI(log: TrafficLog) {
-        val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-        val displayLog = log.copy(timestamp = time)
+    private fun showDnsDialog() {
+        val prefs = getSharedPreferences("vpn_prefs", MODE_PRIVATE)
+        val currentDns = prefs.getString("dns_server", "1.1.1.1")
 
-        logList.add(0, displayLog)
-        if (logList.size > 100) logList.removeAt(logList.lastIndex)
+        val input = EditText(this)
+        input.setText(currentDns)
+        input.setHint("e.g. 1.1.1.1 or 8.8.8.8")
+        input.setPadding(50, 50, 50, 50)
+        input.setTextColor(Color.BLACK)
 
-        // Используем notifyDataSetChanged() - это менее красиво, но на 100% стабильно
-        logAdapter.notifyDataSetChanged()
+        AlertDialog.Builder(this)
+            .setTitle("Custom DNS Server")
+            .setMessage("Введите IP адрес DNS сервера (например 94.140.14.14 для AdGuard)")
+            .setView(input)
+            .setPositiveButton("Save") { _, _ ->
+                val newDns = input.text.toString().trim()
+                if (newDns.isNotEmpty()) {
+                    prefs.edit().putString("dns_server", newDns).apply()
+                    binding.tvCurrentDns.text = "Server: $newDns"
+                    Toast.makeText(this, "DNS сохранен. Перезапустите VPN.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun toggleVpn() {
+        if (isVpnRunning) {
+            startService(Intent(this, PrivacyVpnService::class.java).setAction("STOP"))
+        } else {
+            val intent = VpnService.prepare(this)
+            if (intent != null) startActivityForResult(intent, 0)
+            else onActivityResult(0, RESULT_OK, null)
+        }
     }
 
     private fun updateStatsUI() {
-        val topThreats = AnalyticsManager.getTopThreats()
-        val riskPercent = AnalyticsManager.getRiskPercentage()
-        val total = AnalyticsManager.getTotalRequests()
-        val blocked = AnalyticsManager.getBlockedCount()
-
-        val sb = StringBuilder()
-        sb.append("Запросов: $total | Трекеров: $blocked\n\n")
-
-        if (topThreats.isEmpty()) {
-            sb.append("Ожидание данных...")
-        } else {
-            sb.append("ТОП-5 УГРОЗ:\n")
-            topThreats.forEachIndexed { index, stat ->
-                sb.append("${index + 1}. ${stat.domain} (${stat.count})\n")
-            }
-        }
-
-        binding.tvStats.text = sb.toString()
-        binding.progressRisk.progress = riskPercent
-
-        val color = if (riskPercent < 5) Color.GREEN else if (riskPercent < 20) Color.YELLOW else Color.RED
-        binding.tvRiskPercent.setTextColor(color)
-        binding.tvRiskPercent.text = "Риск: $riskPercent%"
-        binding.progressRisk.progressTintList = android.content.res.ColorStateList.valueOf(color)
+        binding.tvTotalCount.text = AnalyticsManager.getTotalRequests().toString()
+        binding.tvBlockedCount.text = AnalyticsManager.getBlockedCount().toString()
     }
 
     private fun updateButtonState() {
         if (isVpnRunning) {
-            binding.btnVpnToggle.text = "STOP"
-            binding.btnVpnToggle.background.setTint(Color.RED)
+            binding.tvStatus.text = "CONNECTED"
+            binding.tvStatus.setTextColor(getColor(R.color.neon_green))
+            binding.btnPower.setColorFilter(getColor(R.color.neon_green))
+            binding.btnPower.setBackgroundResource(R.drawable.circle_bg) // Можно сделать светящийся фон
         } else {
-            binding.btnVpnToggle.text = "START"
-            binding.btnVpnToggle.background.setTint(Color.GREEN)
+            binding.tvStatus.text = "DISCONNECTED"
+            binding.tvStatus.setTextColor(getColor(R.color.text_secondary))
+            binding.btnPower.setColorFilter(getColor(R.color.text_secondary))
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == RESULT_OK) {
-            startService(Intent(this, PrivacyVpnService::class.java))
-        }
+        if (resultCode == RESULT_OK) startService(Intent(this, PrivacyVpnService::class.java))
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        try {
-            LocalBroadcastManager.getInstance(this).unregisterReceiver(vpnReceiver)
-        } catch (e: Exception) {}
+        try { LocalBroadcastManager.getInstance(this).unregisterReceiver(vpnReceiver) } catch (e: Exception) {}
     }
 }
 
+// ... LogAdapter оставь тот же, только можно поменять цвета текста на светлые для темной темы ...
 class LogAdapter(private val logs: List<TrafficLog>) : RecyclerView.Adapter<LogAdapter.LogViewHolder>() {
     class LogViewHolder(val binding: ItemLogBinding) : RecyclerView.ViewHolder(binding.root)
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LogViewHolder {
-        return LogViewHolder(ItemLogBinding.inflate(LayoutInflater.from(parent.context), parent, false))
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = LogViewHolder(ItemLogBinding.inflate(LayoutInflater.from(parent.context), parent, false))
 
     override fun onBindViewHolder(holder: LogViewHolder, position: Int) {
-        // Добавляем защиту от выхода за границы
         if (position >= logs.size) return
-
         val log = logs[position]
         holder.binding.tvTime.text = log.timestamp
         holder.binding.tvDomain.text = log.domain
+        holder.binding.tvCompany.text = log.company.name
+        holder.binding.tvCategory.text = log.company.category
+
+        // Для темной темы лучше сделать текст белым
+        holder.binding.tvDomain.setTextColor(Color.WHITE)
 
         if (log.isTracker) {
-            holder.binding.tvStatus.text = "TRACKER"
-            holder.binding.tvStatus.setTextColor(Color.RED)
+            holder.binding.tvStatus.text = "BLOCKED"
+            holder.binding.tvStatus.setTextColor(Color.parseColor("#FF1744"))
         } else {
             holder.binding.tvStatus.text = "OK"
-            holder.binding.tvStatus.setTextColor(Color.parseColor("#388E3C"))
+            holder.binding.tvStatus.setTextColor(Color.parseColor("#00E676"))
         }
     }
     override fun getItemCount() = logs.size

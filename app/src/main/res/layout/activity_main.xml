@@ -1,117 +1,187 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#F5F5F5">
+    android:background="@color/bg_main"
+    android:padding="16dp">
 
-    <!-- Верхняя панель -->
-    <LinearLayout
-        android:layout_width="match_parent"
+    <!-- Заголовок и Настройки -->
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="#1976D2"
-        android:padding="16dp"
-        android:gravity="center_vertical">
+        android:text="Privacy Inspector"
+        android:textColor="@color/text_primary"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- ВОТ ЗДЕСЬ БЫЛА ОШИБКА. Добавлена высота wrap_content -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+    <ImageView
+        android:id="@+id/btnSettings"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:src="@android:drawable/ic_menu_preferences"
+        app:tint="@color/text_secondary"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tvTitle"
+        app:layout_constraintBottom_toBottomOf="@id/tvTitle"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Privacy Inspector"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:textStyle="bold"/>
-            <TextView
-                android:id="@+id/tvDatabaseSize"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="База: ожидание..."
-                android:textColor="#BBDEFB"
-                android:textSize="12sp"/>
-        </LinearLayout>
-
-        <Button
-            android:id="@+id/btnVpnToggle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="START"
-            android:backgroundTint="#FFC107"
-            android:textColor="#000000"/>
-    </LinearLayout>
-
-    <!-- Карточка статистики -->
+    <!-- Статус подключения (Большая кнопка) -->
     <androidx.cardview.widget.CardView
+        android:id="@+id/cardStatus"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="12dp"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="4dp">
+        android:layout_height="180dp"
+        android:layout_marginTop="24dp"
+        app:cardBackgroundColor="@color/bg_card"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="0dp"
+        app:layout_constraintTop_toBottomOf="@id/tvTitle">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:layout_height="match_parent">
+
+            <!-- Кнопка питания -->
+            <ImageView
+                android:id="@+id/btnPower"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@android:drawable/ic_lock_power_off"
+                app:tint="@color/neon_blue"
+                android:background="@drawable/circle_bg"
+                android:padding="16dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/tvStatus"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="16dp"/>
 
             <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="АНАЛИТИКА УГРОЗ"
-                android:textStyle="bold"
-                android:textColor="#333333"/>
-
-            <TextView
-                android:id="@+id/tvStats"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Нет данных для анализа..."
-                android:layout_marginTop="8dp"
-                android:fontFamily="monospace"
-                android:textSize="12sp"/>
-
-            <ProgressBar
-                android:id="@+id/progressRisk"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:max="100"
-                android:progress="0"/>
-
-            <TextView
-                android:id="@+id/tvRiskPercent"
+                android:id="@+id/tvStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Риск приватности: 0%"
-                android:layout_gravity="end"
+                android:text="TAP TO CONNECT"
+                android:textColor="@color/text_secondary"
+                android:letterSpacing="0.1"
+                android:textStyle="bold"
+                android:layout_marginBottom="24dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
+
+            <!-- DNS IP -->
+            <TextView
+                android:id="@+id/tvCurrentDns"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DNS: 1.1.1.1"
+                android:textColor="#555555"
+                android:textSize="10sp"
                 android:layout_marginTop="4dp"
-                android:textSize="12sp"
-                android:textStyle="bold"/>
-        </LinearLayout>
+                app:layout_constraintTop_toBottomOf="@id/tvStatus"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.cardview.widget.CardView>
 
-    <TextView
+    <!-- Статистика (2 карточки) -->
+    <LinearLayout
+        android:id="@+id/layoutStats"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="16dp"
-        android:paddingBottom="4dp"
-        android:text="Поток данных (Live Log)"
-        android:textStyle="bold"
-        android:textColor="#757575"/>
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/cardStatus">
 
-    <!-- Список логов -->
+        <!-- Карточка: Всего запросов -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            app:cardBackgroundColor="@color/bg_card"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/tvTotalCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Total Requests"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Карточка: Заблокировано (ТЕПЕРЬ КЛИКАБЕЛЬНАЯ) -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardBlocked"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            app:cardBackgroundColor="@color/bg_card"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/tvBlockedCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/neon_red"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Threats Blocked"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvLogsHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="LIVE TRAFFIC LOG"
+        android:textColor="@color/text_secondary"
+        android:textStyle="bold"
+        android:layout_marginTop="24dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layoutStats"/>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvLogs"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="#FFFFFF"/>
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/tvLogsHeader"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

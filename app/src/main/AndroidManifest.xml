@@ -5,13 +5,19 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
 
+    <!-- Внимание: убедитесь, что тег application закрыт правильно -->
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="Privacy Inspector"
-        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-
+        android:theme="@style/Theme.PrivacyInspector">
+        <activity
+            android:name=".BlockedActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -24,7 +30,8 @@
         <service
             android:name=".PrivacyVpnService"
             android:permission="android.permission.BIND_VPN_SERVICE"
-            android:exported="false">
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
             <intent-filter>
                 <action android:name="android.net.VpnService" />
             </intent-filter>
